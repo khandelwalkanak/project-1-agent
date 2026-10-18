@@ -1,18 +1,21 @@
 """
-Streamlit dashboard — social trends reports viewer.
+Streamlit dashboard — combined report view (main page).
 
 Run locally:   uv run --extra dashboard streamlit run dashboard.py
 Deploy:        https://share.streamlit.io
 """
 
 import re
+import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
+from dashboard_utils import inject_ui, EMERALD as _EMERALD_IMPORT
 
 st.set_page_config(
     page_title="Social Trends Agent",
@@ -20,97 +23,13 @@ st.set_page_config(
     layout="wide",
 )
 
+inject_ui()
+
 REPORTS_DIR = Path("reports")
-
-# ── Cursor-tracking gradient (JS → CSS variable) ──────────────────────────────
-components.html("""
-<script>
-(function () {
-    function init() {
-        var root = window.parent.document.documentElement;
-        if (!root) { setTimeout(init, 300); return; }
-        window.parent.addEventListener('mousemove', function (e) {
-            root.style.setProperty('--cx', (e.clientX / window.parent.innerWidth  * 100).toFixed(1) + '%');
-            root.style.setProperty('--cy', (e.clientY / window.parent.innerHeight * 100).toFixed(1) + '%');
-        });
-    }
-    init();
-})();
-</script>
-""", height=0)
-
-# ── CSS ───────────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-:root { --cx: 50%; --cy: 30%; }
-
-/* Cursor-driven radial gradient — layered on top of the config.toml white base */
-[data-testid="stAppViewContainer"] {
-    background: radial-gradient(
-        ellipse 70% 55% at var(--cx) var(--cy),
-        #d1fae5 0%, #ecfdf5 20%, #ffffff 55%
-    ) !important;
-}
-
-/* Metric cards */
-div[data-testid="metric-container"] {
-    background: rgba(240, 253, 244, 0.85);
-    border: 1px solid #6ee7b7;
-    border-radius: 12px;
-    padding: 18px 20px !important;
-}
-
-/* Badges */
-.badge {
-    display: inline-block; padding: 3px 12px; border-radius: 20px;
-    font-size: 0.76em; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
-}
-.badge-SAME       { background: #dbeafe; color: #1d4ed8; }
-.badge-TWIST      { background: #fed7aa; color: #c2410c; }
-.badge-WHITESPACE { background: #a7f3d0; color: #047857; }
-.badge-low        { background: #d1fae5; color: #065f46; }
-.badge-med        { background: #fef9c3; color: #92400e; }
-.badge-high       { background: #fecaca; color: #b91c1c; }
-
-/* 3-second hook callout */
-.hook-box {
-    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-    border-left: 4px solid #10b981;
-    padding: 12px 18px; border-radius: 0 10px 10px 0;
-    font-style: italic; color: #065f46;
-    margin: 10px 0 14px 0; line-height: 1.6; font-size: 0.95em;
-}
-
-/* Why it works */
-.why-box {
-    background: #f9fafb; border: 1px solid #d1fae5; border-radius: 8px;
-    padding: 10px 16px; color: #374151; font-size: 0.88em; line-height: 1.6; margin-top: 6px;
-}
-
-/* Hashtags */
-.hashtags { color: #059669; font-size: 0.82em; line-height: 1.8; }
-
-/* Section headings */
-.section-heading {
-    font-size: 1.05em; font-weight: 700; color: #064e3b;
-    margin: 24px 0 12px 0; padding-bottom: 8px;
-    border-bottom: 2px solid #6ee7b7; letter-spacing: 0.3px;
-}
-
-/* Report header */
-.report-header {
-    background: linear-gradient(135deg, #065f46 0%, #059669 60%, #10b981 100%);
-    border-radius: 14px; padding: 26px 32px; margin-bottom: 20px; color: white;
-    box-shadow: 0 4px 24px rgba(5, 150, 105, 0.18);
-}
-.report-header h1 { margin: 0 0 6px 0; font-size: 1.65em; font-weight: 800; color: white; }
-.report-header .sub { color: #a7f3d0; font-size: 0.88em; }
-</style>
-""", unsafe_allow_html=True)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-_EMERALD = ["#065f46", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"]
+_EMERALD = _EMERALD_IMPORT
 _LABEL_COLORS  = {"SAME": "#3b82f6", "TWIST": "#f97316", "WHITESPACE": "#10b981"}
 _EFFORT_COLORS = {"low": "#10b981", "med": "#f59e0b", "high": "#ef4444"}
 
