@@ -10,7 +10,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dashboard_utils import inject_ui, load_db, no_data_notice, PLOTLY_LAYOUT
 
-st.set_page_config(page_title="Web & Trends — Social Trends", page_icon="🌐", layout="wide")
+st.set_page_config(page_title="Web & Trends — Social Trends", page_icon="https://www.google.com/s2/favicons?domain=google.com&sz=32", layout="wide")
 inject_ui()
 
 st.markdown("""
@@ -47,10 +47,14 @@ st.markdown("""
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
     '<div class="source-header source-web">'
-    '<h1>🌐 Web & Google Trends</h1>'
+    '<div style="display:flex;align-items:center;gap:18px;">'
+    '<img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" '
+    'style="height:32px;background:white;border-radius:8px;padding:6px 12px;" />'
+    '<div>'
+    '<h1 style="margin:0 0 4px 0;">Web & Google Trends</h1>'
     '<div class="sub">Articles, blogs, and discussions via Tavily web search · '
     'Google Trends interest scores for India</div>'
-    '</div>',
+    '</div></div></div>',
     unsafe_allow_html=True,
 )
 

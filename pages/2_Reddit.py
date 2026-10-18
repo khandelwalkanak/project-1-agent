@@ -9,7 +9,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dashboard_utils import inject_ui, load_db, no_data_notice, PLOTLY_LAYOUT
 
-st.set_page_config(page_title="Reddit — Social Trends", page_icon="💬", layout="wide")
+st.set_page_config(page_title="Reddit — Social Trends", page_icon="https://www.google.com/s2/favicons?domain=reddit.com&sz=32", layout="wide")
 inject_ui()
 
 st.markdown("""
@@ -48,10 +48,14 @@ st.markdown("""
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
     '<div class="source-header source-rd">'
-    '<h1>💬 Reddit</h1>'
+    '<div style="display:flex;align-items:center;gap:18px;">'
+    '<img src="https://www.redditstatic.com/desktop2x/img/snoovatars/snoo.png" '
+    'style="height:52px;width:52px;object-fit:contain;" />'
+    '<div>'
+    '<h1 style="margin:0 0 4px 0;">Reddit</h1>'
     '<div class="sub">Posts from r/RayBanMeta · r/AIGlasses · r/smartglasses · r/wearables · '
     'r/gadgets · r/india · r/IndianGaming · r/TechIndia — sourced via Tavily</div>'
-    '</div>',
+    '</div></div></div>',
     unsafe_allow_html=True,
 )
 

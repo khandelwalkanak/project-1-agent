@@ -10,7 +10,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from dashboard_utils import inject_ui, load_db, no_data_notice, EMERALD, PLOTLY_LAYOUT
 
-st.set_page_config(page_title="YouTube — Social Trends", page_icon="▶️", layout="wide")
+st.set_page_config(page_title="YouTube — Social Trends", page_icon="https://www.google.com/s2/favicons?domain=youtube.com&sz=32", layout="wide")
 inject_ui()
 
 st.markdown("""
@@ -49,9 +49,13 @@ st.markdown("""
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown(
     '<div class="source-header source-yt">'
-    '<h1>▶️ YouTube</h1>'
+    '<div style="display:flex;align-items:center;gap:18px;">'
+    '<img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" '
+    'style="height:36px;background:white;border-radius:8px;padding:6px 10px;" />'
+    '<div>'
+    '<h1 style="margin:0 0 4px 0;">YouTube</h1>'
     '<div class="sub">Videos collected via YouTube Data API v3 · ranked by views per day (engagement velocity)</div>'
-    '</div>',
+    '</div></div></div>',
     unsafe_allow_html=True,
 )
 
