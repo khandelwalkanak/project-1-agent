@@ -24,6 +24,7 @@ from tools.youtube import search_youtube, YOUTUBE_TOOL_SCHEMA
 from tools.web_search import web_search, WEB_SEARCH_TOOL_SCHEMA
 from storage.duckdb_store import DuckDBStore
 from prompts.system import SYSTEM_PROMPT
+from delivery.email_sender import send_report
 
 TOOL_REGISTRY: dict[str, callable] = {
     "search_youtube": search_youtube,
@@ -209,6 +210,7 @@ def main() -> None:
     report_path.write_text(report, encoding="utf-8")
 
     print(f"\nReport saved → {report_path}")
+    send_report(report)
     print("\n" + "=" * 60)
     print(report)
 
