@@ -35,6 +35,25 @@ st.markdown("""
 }
 [data-testid="stSidebarContent"] { background: #f0fdf4 !important; }
 
+/* ── Force dark text so it's visible on white ─────────────────────────── */
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] strong,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] span,
+[data-testid="stMarkdownContainer"] a,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {
+    color: #111827 !important;
+}
+[data-testid="stMarkdownContainer"] a {
+    color: #059669 !important;
+    text-decoration: underline;
+}
+[data-testid="stCaptionContainer"] p {
+    color: #6b7280 !important;
+}
+
 /* ── Metric cards ─────────────────────────────────────────────────────── */
 div[data-testid="metric-container"] {
     background: #f0fdf4;
