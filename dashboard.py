@@ -23,26 +23,38 @@ REPORTS_DIR = Path("reports")
 
 st.markdown("""
 <style>
-/* Metric cards */
+/* ── Base: force white background ─────────────────────────────────────── */
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.main {
+    background: #ffffff !important;
+}
+[data-testid="stSidebar"] {
+    background: #f0fdf4 !important;
+    border-right: 1px solid #bbf7d0 !important;
+}
+[data-testid="stSidebarContent"] { background: #f0fdf4 !important; }
+
+/* ── Metric cards ─────────────────────────────────────────────────────── */
 div[data-testid="metric-container"] {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #f0fdf4;
+    border: 1px solid #6ee7b7;
     border-radius: 12px;
     padding: 18px 20px !important;
 }
 div[data-testid="metric-container"] label {
-    color: #64748b !important;
+    color: #065f46 !important;
     font-size: 0.8em !important;
     text-transform: uppercase;
     letter-spacing: 0.6px;
 }
 div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     font-size: 2em !important;
-    color: #1d4ed8 !important;
+    color: #059669 !important;
     font-weight: 700 !important;
 }
 
-/* Badges */
+/* ── Badges ───────────────────────────────────────────────────────────── */
 .badge {
     display: inline-block;
     padding: 3px 12px;
@@ -52,59 +64,59 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     letter-spacing: 0.4px;
     text-transform: uppercase;
 }
-.badge-SAME       { background: #dbeafe; color: #1d4ed8; }
+.badge-SAME       { background: #d1fae5; color: #065f46; }
 .badge-TWIST      { background: #fed7aa; color: #c2410c; }
-.badge-WHITESPACE { background: #bbf7d0; color: #15803d; }
-.badge-low        { background: #bbf7d0; color: #15803d; }
-.badge-med        { background: #fef08a; color: #92400e; }
+.badge-WHITESPACE { background: #a7f3d0; color: #047857; }
+.badge-low        { background: #d1fae5; color: #065f46; }
+.badge-med        { background: #fef9c3; color: #92400e; }
 .badge-high       { background: #fecaca; color: #b91c1c; }
 
-/* 3-second hook callout */
+/* ── 3-second hook callout ────────────────────────────────────────────── */
 .hook-box {
-    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
-    border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    border-left: 4px solid #10b981;
     padding: 12px 18px;
     border-radius: 0 10px 10px 0;
     font-style: italic;
-    color: #1e40af;
+    color: #065f46;
     margin: 10px 0 14px 0;
     line-height: 1.6;
     font-size: 0.95em;
 }
 
-/* Why it works */
+/* ── Why it works ────────────────────────────────────────────────────── */
 .why-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #f9fafb;
+    border: 1px solid #d1fae5;
     border-radius: 8px;
     padding: 10px 16px;
-    color: #475569;
+    color: #374151;
     font-size: 0.88em;
     line-height: 1.6;
     margin-top: 6px;
 }
 
-/* Hashtags */
+/* ── Hashtags ─────────────────────────────────────────────────────────── */
 .hashtags {
-    color: #6366f1;
+    color: #059669;
     font-size: 0.82em;
     line-height: 1.8;
 }
 
-/* Section headings */
+/* ── Section headings ────────────────────────────────────────────────── */
 .section-heading {
     font-size: 1.05em;
     font-weight: 700;
-    color: #0f172a;
+    color: #064e3b;
     margin: 28px 0 12px 0;
     padding-bottom: 8px;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid #6ee7b7;
     letter-spacing: 0.3px;
 }
 
-/* Report header */
+/* ── Report header ───────────────────────────────────────────────────── */
 .report-header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #065f46 0%, #059669 100%);
     border-radius: 14px;
     padding: 28px 32px;
     margin-bottom: 24px;
@@ -117,7 +129,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: white;
 }
 .report-header .sub {
-    color: #bfdbfe;
+    color: #a7f3d0;
     font-size: 0.9em;
 }
 </style>
