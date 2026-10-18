@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# DuckDB files — data/ dir is gitignored except the .gitkeep
+data/*.duckdb
+data/*.duckdb.wal
+
+# Reports are generated output; add them if you want to commit them
+# reports/*.md
