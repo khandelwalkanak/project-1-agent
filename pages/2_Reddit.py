@@ -94,9 +94,12 @@ df = df.reset_index(drop=True)
 st.caption(f"Showing {len(df)} of {len(rows)} posts")
 
 
+_SUB_CANONICAL = {s.lower(): s for s in
+    ["RayBanMeta", "AIGlasses", "smartglasses", "wearables", "gadgets", "india", "IndianGaming", "TechIndia"]}
+
 def _sub_class(sub: str) -> str:
-    known = {"RayBanMeta", "AIGlasses", "smartglasses", "wearables", "gadgets", "india", "IndianGaming", "TechIndia"}
-    return f"sub-{sub}" if sub in known else "sub-other"
+    canonical = _SUB_CANONICAL.get(sub.lower())
+    return f"sub-{canonical}" if canonical else "sub-other"
 
 
 # ── Posts grouped by subreddit ────────────────────────────────────────────────
@@ -104,9 +107,10 @@ if sel_sub == "All":
     sub_order = df["subreddit"].value_counts().index.tolist()
     for sub in sub_order:
         sub_df = df[df["subreddit"] == sub]
+        display_sub = _SUB_CANONICAL.get(sub.lower(), sub)
         st.markdown(
             f'<div class="section-heading">'
-            f'<span class="rd-sub {_sub_class(sub)}">r/{sub}</span>'
+            f'<span class="rd-sub {_sub_class(sub)}">r/{display_sub}</span>'
             f' &nbsp; {len(sub_df)} posts'
             f'</div>',
             unsafe_allow_html=True,
