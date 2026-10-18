@@ -3,7 +3,6 @@
 from pathlib import Path
 import duckdb
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ── Color palette ─────────────────────────────────────────────────────────────
 EMERALD = ["#065f46", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"]
@@ -111,7 +110,7 @@ _JS = """
 def inject_ui() -> None:
     """Inject shared CSS and cursor-tracking JS. Call once per page."""
     st.markdown(_CSS, unsafe_allow_html=True)
-    components.html(_JS, height=0)
+    st.markdown(_JS, unsafe_allow_html=True)
 
 
 # ── DuckDB ────────────────────────────────────────────────────────────────────
