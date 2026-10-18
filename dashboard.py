@@ -408,14 +408,14 @@ tab_overview, tab_themes, tab_ideas, tab_trends = st.tabs(
 
 with tab_overview:
     if parsed["themes"]:
-        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True)
+        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="overview_themes")
 
     if parsed["ideas"]:
         c1, c2 = st.columns(2)
         with c1:
-            st.plotly_chart(_chart_labels(parsed["ideas"]), use_container_width=True)
+            st.plotly_chart(_chart_labels(parsed["ideas"]), use_container_width=True, key="overview_labels")
         with c2:
-            st.plotly_chart(_chart_effort(parsed["ideas"]), use_container_width=True)
+            st.plotly_chart(_chart_effort(parsed["ideas"]), use_container_width=True, key="overview_effort")
 
         # Quick summary table
         st.markdown('<div class="section-heading">Ideas at a Glance</div>', unsafe_allow_html=True)
@@ -431,7 +431,7 @@ with tab_overview:
 
 with tab_themes:
     if parsed["themes"]:
-        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True)
+        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="themes_bar")
         st.markdown('<div class="section-heading">Theme Breakdown</div>', unsafe_allow_html=True)
         for t in parsed["themes"]:
             with st.container(border=True):
@@ -489,7 +489,7 @@ with tab_ideas:
 
 with tab_trends:
     if len(report_files) >= 2:
-        st.plotly_chart(_chart_trends(report_files), use_container_width=True)
+        st.plotly_chart(_chart_trends(report_files), use_container_width=True, key="trends_line")
     else:
         st.info("Run the agent at least twice to see trends across reports.")
         st.caption("The chart will show YouTube videos and web results collected per run over time.")
