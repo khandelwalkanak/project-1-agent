@@ -44,35 +44,13 @@ st.markdown("""
 <style>
 :root { --cx: 50%; --cy: 30%; }
 
-/* Cursor-driven radial gradient background */
-[data-testid="stAppViewContainer"],
-[data-testid="stMain"],
-.main {
+/* Cursor-driven radial gradient — layered on top of the config.toml white base */
+[data-testid="stAppViewContainer"] {
     background: radial-gradient(
         ellipse 70% 55% at var(--cx) var(--cy),
         #d1fae5 0%, #ecfdf5 20%, #ffffff 55%
     ) !important;
 }
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background: #f0fdf4 !important;
-    border-right: 1px solid #bbf7d0 !important;
-}
-[data-testid="stSidebarContent"] { background: #f0fdf4 !important; }
-
-/* Force dark text on white */
-[data-testid="stMarkdownContainer"] p,
-[data-testid="stMarkdownContainer"] strong,
-[data-testid="stMarkdownContainer"] li,
-[data-testid="stMarkdownContainer"] span,
-[data-testid="stMarkdownContainer"] h1,
-[data-testid="stMarkdownContainer"] h2,
-[data-testid="stMarkdownContainer"] h3 {
-    color: #111827 !important;
-}
-[data-testid="stMarkdownContainer"] a { color: #059669 !important; text-decoration: underline; }
-[data-testid="stCaptionContainer"] p  { color: #6b7280 !important; }
 
 /* Metric cards */
 div[data-testid="metric-container"] {
@@ -80,18 +58,6 @@ div[data-testid="metric-container"] {
     border: 1px solid #6ee7b7;
     border-radius: 12px;
     padding: 18px 20px !important;
-    backdrop-filter: blur(8px);
-}
-div[data-testid="metric-container"] label {
-    color: #065f46 !important;
-    font-size: 0.8em !important;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-}
-div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-    font-size: 2em !important;
-    color: #059669 !important;
-    font-weight: 700 !important;
 }
 
 /* Badges */
@@ -139,12 +105,6 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 }
 .report-header h1 { margin: 0 0 6px 0; font-size: 1.65em; font-weight: 800; color: white; }
 .report-header .sub { color: #a7f3d0; font-size: 0.88em; }
-
-/* Active tab accent */
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: #059669 !important;
-    border-bottom-color: #059669 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
