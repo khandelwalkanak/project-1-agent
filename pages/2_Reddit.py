@@ -49,8 +49,8 @@ st.markdown("""
 st.markdown(
     '<div class="source-header source-rd">'
     '<div style="display:flex;align-items:center;gap:18px;">'
-    '<img src="https://www.redditstatic.com/desktop2x/img/snoovatars/snoo.png" '
-    'style="height:52px;width:52px;object-fit:contain;" />'
+    '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Reddit_logo_2023.svg/200px-Reddit_logo_2023.svg.png" '
+    'style="height:36px;background:white;border-radius:8px;padding:6px 10px;object-fit:contain;" />'
     '<div>'
     '<h1 style="margin:0 0 4px 0;">Reddit</h1>'
     '<div class="sub">Posts from r/RayBanMeta · r/AIGlasses · r/smartglasses · r/wearables · '
