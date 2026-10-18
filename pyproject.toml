@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dashboard = ["streamlit>=1.40.0"]
+dashboard = ["streamlit>=1.40.0", "plotly>=5.24.0"]
 
 [build-system]
 requires = ["hatchling"]
