@@ -317,6 +317,16 @@ with st.sidebar:
     st.markdown("### 📡 Social Trends Agent")
     st.caption("Meta Ray-Ban · India Content Ideas")
     st.divider()
+    st.markdown(
+        """
+        This agent monitors **trending Meta Ray-Ban smart glasses content** on YouTube and the web,
+        then uses AI to generate **India-specific content ideas** you can film with the glasses.
+
+        It runs daily, ranks themes by average views, and produces a structured report with
+        ready-to-shoot hooks, shot lists, effort ratings, and hashtags.
+        """,
+    )
+    st.divider()
 
     if not report_files:
         st.warning("No reports yet.")
