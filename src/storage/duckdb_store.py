@@ -108,9 +108,17 @@ class DuckDBStore:
                     (id, title, subreddit, score, comments, engagement, url, selftext, flair, created_utc, query)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, [
-                p["id"], p["title"], p["subreddit"], p["score"], p["comments"],
-                p["engagement"], p["url"], p.get("selftext", ""),
-                p.get("flair", ""), p.get("created_utc", 0), query,
+                p.get("url", ""),           # use URL as ID (Tavily has no post ID)
+                p.get("title", ""),
+                p.get("subreddit", ""),
+                p.get("score", 0),
+                p.get("comments", 0),
+                p.get("engagement", 0),
+                p.get("url", ""),
+                p.get("selftext", p.get("snippet", "")),
+                p.get("flair", ""),
+                0.0,
+                query,
             ])
 
     def upsert_web(self, results: list[dict], query: str) -> None:

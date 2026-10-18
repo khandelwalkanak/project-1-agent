@@ -1,196 +1,141 @@
 """
-Reddit search tool — OAuth2 client credentials (app-only, no user login).
+Reddit search tool — powered by Tavily with site:reddit.com targeting.
 
-Subreddits pre-configured by relevance:
+Reddit's API now requires approval for app creation, so we query Reddit's
+public content through Tavily (which already indexes it) using site:reddit.com.
+
+Subreddits targeted via search queries:
   - Ray-Ban Meta specific : r/RayBanMeta, r/AIGlasses, r/smartglasses
   - Wearable/tech         : r/wearables, r/gadgets
   - India communities     : r/india, r/IndianGaming, r/TechIndia
 
-Requires in .env:
-    REDDIT_CLIENT_ID     — from https://www.reddit.com/prefs/apps
-    REDDIT_CLIENT_SECRET — same page
+Requires: TAVILY_API_KEY (already used by web_search tool)
 """
 
 import os
-import time
 import httpx
 
-# Subreddits ordered by specificity — most relevant first
 RAYBAN_META_SUBREDDITS = [
-    "RayBanMeta",    # dedicated Ray-Ban Meta community
-    "AIGlasses",     # AI/smart glasses general
-    "smartglasses",  # smart glasses broad
-    "wearables",     # wearable tech
-    "gadgets",       # general gadgets (large, India-heavy)
-    "india",         # Indian general community
-    "IndianGaming",  # Indian tech & gaming
-    "TechIndia",     # Indian tech discussions
+    "RayBanMeta",
+    "AIGlasses",
+    "smartglasses",
+    "wearables",
+    "gadgets",
+    "india",
+    "IndianGaming",
+    "TechIndia",
 ]
 
 REDDIT_TOOL_SCHEMA = {
     "name": "search_reddit",
     "description": (
-        "Search Reddit for posts about Meta Ray-Ban smart glasses. "
-        "When no subreddit is given, searches across the pre-configured list: "
-        "r/RayBanMeta, r/AIGlasses, r/smartglasses, r/wearables, r/gadgets, r/india, r/IndianGaming, r/TechIndia. "
-        "Returns posts sorted by engagement score (upvotes × comment weight). "
-        "Use time_filter='month' for trends; 'week' for very recent buzz."
+        "Search Reddit posts about Meta Ray-Ban smart glasses using Tavily. "
+        "Targets specific subreddits: r/RayBanMeta, r/AIGlasses, r/smartglasses, "
+        "r/wearables, r/gadgets, r/india, r/IndianGaming, r/TechIndia. "
+        "Returns post titles, snippets, and URLs ranked by relevance. "
+        "Use to find community discussions, reviews, and sentiment not on YouTube."
     ),
     "input_schema": {
         "type": "object",
         "properties": {
             "query": {
                 "type": "string",
-                "description": "Search query, e.g. 'ray-ban meta india review'"
+                "description": "Search query, e.g. 'ray-ban meta glasses review india'"
             },
             "subreddit": {
                 "type": "string",
                 "description": (
-                    "Specific subreddit to search (without r/), e.g. 'RayBanMeta'. "
-                    "Leave empty to search all configured subreddits."
+                    "Target a specific subreddit (without r/), e.g. 'RayBanMeta'. "
+                    "Leave empty to search across all configured subreddits."
                 ),
                 "default": ""
             },
             "max_results": {
                 "type": "integer",
-                "description": "Max posts to return (1–10 per subreddit). Default 5.",
-                "default": 5
-            },
-            "time_filter": {
-                "type": "string",
-                "enum": ["day", "week", "month", "year", "all"],
-                "description": "Time window for posts. Default 'month'.",
-                "default": "month"
+                "description": "Number of results to return (1–10). Default 8.",
+                "default": 8
             },
         },
         "required": ["query"]
     },
 }
 
-# Module-level token cache — token lasts 24 h, reuse within a run
-_token_cache: dict = {"token": None, "expires_at": 0.0}
 
-_USER_AGENT = "SocialTrendsAgent/1.0 (by /u/social_trends_bot)"
-
-
-def _get_token(client_id: str, client_secret: str) -> str:
-    now = time.time()
-    if _token_cache["token"] and now < _token_cache["expires_at"] - 60:
-        return _token_cache["token"]
-
-    resp = httpx.post(
-        "https://www.reddit.com/api/v1/access_token",
-        auth=(client_id, client_secret),
-        data={"grant_type": "client_credentials"},
-        headers={"User-Agent": _USER_AGENT},
-        timeout=10.0,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    _token_cache["token"] = data["access_token"]
-    _token_cache["expires_at"] = now + data.get("expires_in", 3600)
-    return _token_cache["token"]
-
-
-def _search_one(
-    token: str,
-    query: str,
-    subreddit: str,
-    max_results: int,
-    time_filter: str,
-) -> list[dict]:
-    """Search a single subreddit (or all Reddit if subreddit is empty)."""
-    if subreddit:
-        url = f"https://oauth.reddit.com/r/{subreddit}/search"
-        params = {
-            "q": query, "sort": "top", "t": time_filter,
-            "limit": min(max_results, 10), "restrict_sr": "true",
-        }
-    else:
-        url = "https://oauth.reddit.com/search"
-        params = {
-            "q": query, "sort": "top", "t": time_filter,
-            "limit": min(max_results, 10),
-        }
-
+def _tavily_search(api_key: str, query: str, max_results: int) -> list[dict]:
     try:
-        resp = httpx.get(
-            url, params=params,
-            headers={"Authorization": f"Bearer {token}", "User-Agent": _USER_AGENT},
-            timeout=15.0,
+        resp = httpx.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": api_key,
+                "query": query,
+                "max_results": min(max_results, 10),
+                "search_depth": "basic",
+                "include_answer": False,
+                "include_raw_content": False,
+            },
+            timeout=20.0,
         )
         resp.raise_for_status()
-    except httpx.HTTPStatusError as e:
-        return []
-    except Exception:
+    except Exception as e:
         return []
 
-    posts = []
-    for child in resp.json().get("data", {}).get("children", []):
-        d = child.get("data", {})
-        score = d.get("score", 0)
-        comments = d.get("num_comments", 0)
-        posts.append({
-            "id": d.get("id", ""),
-            "title": d.get("title", ""),
-            "subreddit": d.get("subreddit", subreddit),
-            "score": score,
-            "comments": comments,
-            "engagement": score + comments * 3,  # weight comments higher
-            "url": f"https://reddit.com{d.get('permalink', '')}",
-            "selftext": (d.get("selftext", "") or "")[:300],
-            "created_utc": d.get("created_utc", 0),
-            "upvote_ratio": d.get("upvote_ratio", 0),
-            "flair": d.get("link_flair_text", ""),
-        })
+    return [
+        {
+            "title": r.get("title", ""),
+            "url": r.get("url", ""),
+            "snippet": r.get("content", "")[:400],
+            "published_date": r.get("published_date", ""),
+            "subreddit": _extract_subreddit(r.get("url", "")),
+        }
+        for r in resp.json().get("results", [])
+        if "reddit.com" in r.get("url", "")
+    ]
 
-    return sorted(posts, key=lambda p: p["engagement"], reverse=True)
+
+def _extract_subreddit(url: str) -> str:
+    """Pull subreddit name from a reddit.com URL."""
+    parts = url.split("/")
+    try:
+        idx = parts.index("r")
+        return parts[idx + 1] if idx + 1 < len(parts) else ""
+    except ValueError:
+        return ""
 
 
 def search_reddit(
     query: str,
     subreddit: str = "",
-    max_results: int = 5,
-    time_filter: str = "month",
+    max_results: int = 8,
 ) -> dict:
     """
-    Search Reddit. If subreddit is empty, iterates through all configured
-    subreddits and merges results, deduped by post ID.
+    Search Reddit via Tavily. When subreddit is given, restricts to that
+    subreddit. Otherwise searches across all configured subreddits.
     """
-    client_id = os.getenv("REDDIT_CLIENT_ID")
-    client_secret = os.getenv("REDDIT_CLIENT_SECRET")
-    if not client_id or not client_secret:
-        return {"error": "REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET not set in .env"}
-
-    try:
-        token = _get_token(client_id, client_secret)
-    except Exception as e:
-        return {"error": f"Reddit auth failed: {e}"}
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        return {"error": "TAVILY_API_KEY not set in .env"}
 
     if subreddit:
-        posts = _search_one(token, query, subreddit, max_results, time_filter)
-        return {"posts": posts, "query": query, "subreddits_searched": [subreddit], "count": len(posts)}
+        tavily_query = f"site:reddit.com/r/{subreddit} {query}"
+        results = _tavily_search(api_key, tavily_query, max_results)
+        return {
+            "posts": results,
+            "query": query,
+            "subreddits_searched": [subreddit],
+            "count": len(results),
+        }
 
-    # Search all configured subreddits, merge and dedupe
-    seen_ids: set[str] = set()
-    all_posts: list[dict] = []
-    subreddits_hit: list[str] = []
+    # Search across all configured subreddits
+    subreddit_filter = " OR ".join(f"site:reddit.com/r/{s}" for s in RAYBAN_META_SUBREDDITS)
+    tavily_query = f"({subreddit_filter}) {query}"
+    results = _tavily_search(api_key, tavily_query, max_results)
 
-    for sub in RAYBAN_META_SUBREDDITS:
-        batch = _search_one(token, query, sub, max_results, time_filter)
-        for p in batch:
-            if p["id"] not in seen_ids:
-                seen_ids.add(p["id"])
-                all_posts.append(p)
-        if batch:
-            subreddits_hit.append(sub)
-
-    all_posts.sort(key=lambda p: p["engagement"], reverse=True)
+    subreddits_hit = list({p["subreddit"] for p in results if p["subreddit"]})
 
     return {
-        "posts": all_posts[:max_results * 3],  # cap at 3× per-sub limit
+        "posts": results,
         "query": query,
         "subreddits_searched": RAYBAN_META_SUBREDDITS,
         "subreddits_with_results": subreddits_hit,
-        "count": len(all_posts),
+        "count": len(results),
     }
