@@ -115,7 +115,7 @@ def inject_ui() -> None:
 
 
 # ── DuckDB ────────────────────────────────────────────────────────────────────
-DB_PATH = Path("data/social_trends.duckdb")
+DB_PATH = Path(__file__).parent / "data" / "social_trends.duckdb"
 
 
 def load_db() -> duckdb.DuckDBPyConnection | None:
