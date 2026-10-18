@@ -22,6 +22,8 @@ from dotenv import load_dotenv
 
 from tools.youtube import search_youtube, YOUTUBE_TOOL_SCHEMA
 from tools.web_search import web_search, WEB_SEARCH_TOOL_SCHEMA
+from tools.reddit import search_reddit, REDDIT_TOOL_SCHEMA
+from tools.google_trends import get_google_trends, GOOGLE_TRENDS_TOOL_SCHEMA
 from storage.duckdb_store import DuckDBStore
 from prompts.system import SYSTEM_PROMPT
 from delivery.email_sender import send_report
@@ -29,9 +31,11 @@ from delivery.email_sender import send_report
 TOOL_REGISTRY: dict[str, callable] = {
     "search_youtube": search_youtube,
     "web_search": web_search,
+    "search_reddit": search_reddit,
+    "get_google_trends": get_google_trends,
 }
 
-TOOL_SCHEMAS = [YOUTUBE_TOOL_SCHEMA, WEB_SEARCH_TOOL_SCHEMA]
+TOOL_SCHEMAS = [YOUTUBE_TOOL_SCHEMA, WEB_SEARCH_TOOL_SCHEMA, REDDIT_TOOL_SCHEMA, GOOGLE_TRENDS_TOOL_SCHEMA]
 
 
 def _clean_schema(schema: dict) -> dict:
@@ -71,6 +75,8 @@ def _execute_tool(name: str, inputs: dict, store: DuckDBStore) -> dict:
         store.upsert_youtube(result["videos"])
     elif name == "web_search" and isinstance(result.get("results"), list):
         store.upsert_web(result["results"], inputs.get("query", ""))
+    elif name == "search_reddit" and isinstance(result.get("posts"), list):
+        store.upsert_reddit(result["posts"], inputs.get("query", ""))
 
     return result
 
@@ -153,6 +159,15 @@ def run_agent(
                     print(f"[{run_id}]     ✓ {result.get('count', 0)} videos | top {result.get('top_views_per_day', 0):,} views/day")
                 elif tc.name == "web_search":
                     print(f"[{run_id}]     ✓ {result.get('count', 0)} results")
+                elif tc.name == "search_reddit":
+                    subs = ", ".join(result.get("subreddits_with_results", []))
+                    print(f"[{run_id}]     ✓ {result.get('count', 0)} posts | subs: {subs or 'none'}")
+                elif tc.name == "get_google_trends":
+                    summary = ", ".join(
+                        f"{r['keyword']} ({r['avg_interest']:.0f} {r['direction']})"
+                        for r in result.get("results", [])
+                    )
+                    print(f"[{run_id}]     ✓ trends: {summary}")
 
                 # Package the result back for the LLM
                 tool_result_parts.append(

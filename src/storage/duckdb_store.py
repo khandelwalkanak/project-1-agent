@@ -55,6 +55,24 @@ class DuckDBStore:
             )
         """)
 
+        # Bronze: raw Reddit posts, deduped on post ID
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS bronze_reddit (
+                id           VARCHAR PRIMARY KEY,
+                title        VARCHAR,
+                subreddit    VARCHAR,
+                score        INTEGER,
+                comments     INTEGER,
+                engagement   INTEGER,
+                url          VARCHAR,
+                selftext     VARCHAR,
+                flair        VARCHAR,
+                created_utc  DOUBLE,
+                query        VARCHAR,
+                fetched_at   TIMESTAMP DEFAULT now()
+            )
+        """)
+
         # LLM call log — one row per API call; used to track cost/latency
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS llm_call_log (
@@ -81,6 +99,18 @@ class DuckDBStore:
                 v["views"], v["likes"], v["comments"], v["duration_seconds"],
                 v["views_per_day"], v.get("days_old", 0),
                 v["description"], v["url"], v["query"],
+            ])
+
+    def upsert_reddit(self, posts: list[dict], query: str) -> None:
+        for p in posts:
+            self.conn.execute("""
+                INSERT OR REPLACE INTO bronze_reddit
+                    (id, title, subreddit, score, comments, engagement, url, selftext, flair, created_utc, query)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, [
+                p["id"], p["title"], p["subreddit"], p["score"], p["comments"],
+                p["engagement"], p["url"], p.get("selftext", ""),
+                p.get("flair", ""), p.get("created_utc", 0), query,
             ])
 
     def upsert_web(self, results: list[dict], query: str) -> None:

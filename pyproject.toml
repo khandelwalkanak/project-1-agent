@@ -12,6 +12,7 @@ dependencies = [
     "markdown>=3.7",
     "streamlit>=1.40.0",
     "plotly>=5.24.0",
+    "pytrends>=4.9.2",
 ]
 
 [project.optional-dependencies]
