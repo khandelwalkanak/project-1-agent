@@ -80,6 +80,40 @@ c4.metric("Avg video age", f"{rows['days_old'].mean():.0f} days")
 
 st.divider()
 
+# ── Trends summary ────────────────────────────────────────────────────────
+st.markdown('<div class="section-heading">📊 Trends Summary</div>', unsafe_allow_html=True)
+
+_qperf = (
+    rows.groupby("query")
+    .agg(videos=("views_per_day", "count"), avg_vpd=("views_per_day", "mean"), max_vpd=("views_per_day", "max"))
+    .sort_values("avg_vpd", ascending=False)
+    .reset_index()
+)
+_top_ch = rows.groupby("channel")["views_per_day"].mean().sort_values(ascending=False).head(3)
+
+_q_lines = "".join(
+    f'<li><b>{r["query"]}</b> — {int(r["videos"])} videos · '
+    f'avg {r["avg_vpd"]:,.0f} views/day · peak {r["max_vpd"]:,.0f} views/day</li>'
+    for _, r in _qperf.iterrows()
+)
+_ch_lines = "".join(
+    f'<li><b>{ch}</b> — avg {vpd:,.0f} views/day</li>'
+    for ch, vpd in _top_ch.items()
+)
+
+st.markdown(
+    '<div class="trends-summary-box">'
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
+    f'<div><div style="font-weight:700;color:#065f46;margin-bottom:4px;">Search Queries Tracked</div>'
+    f'<ul>{_q_lines}</ul></div>'
+    f'<div><div style="font-weight:700;color:#065f46;margin-bottom:4px;">Top Channels by Engagement</div>'
+    f'<ul>{_ch_lines}</ul></div>'
+    '</div></div>',
+    unsafe_allow_html=True,
+)
+
+st.divider()
+
 # ── Sidebar filters ───────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### ▶️ Filters")

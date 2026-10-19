@@ -70,6 +70,17 @@ div[data-testid="metric-container"] {
     border-bottom: 2px solid #6ee7b7; letter-spacing: 0.3px;
 }
 
+.trends-summary-box {
+    background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%);
+    border: 1px solid #a7f3d0; border-radius: 12px;
+    padding: 18px 22px; margin: 12px 0 20px 0;
+}
+.trends-summary-box ul {
+    margin: 6px 0 0 0; padding-left: 16px;
+    font-size: 0.85em; color: #374151; line-height: 1.9;
+}
+.trends-summary-box li { margin-bottom: 1px; }
+
 .report-header {
     background: linear-gradient(135deg, #065f46 0%, #059669 60%, #10b981 100%);
     border-radius: 14px; padding: 26px 32px; margin-bottom: 20px; color: white;

@@ -85,6 +85,34 @@ c3.metric("Most active", f"r/{top_sub}")
 
 st.divider()
 
+# ── Trends summary ────────────────────────────────────────────────────────
+st.markdown('<div class="section-heading">📊 Trends Summary</div>', unsafe_allow_html=True)
+
+_sub_counts = rows["subreddit"].value_counts()
+_q_counts   = rows["query"].value_counts()
+
+_sub_lines = "".join(
+    f'<li><b>r/{sub}</b> — {cnt} posts</li>'
+    for sub, cnt in _sub_counts.items()
+)
+_q_lines = "".join(
+    f'<li><b>{q}</b> — {cnt} posts</li>'
+    for q, cnt in _q_counts.head(6).items()
+)
+
+st.markdown(
+    '<div class="trends-summary-box">'
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
+    f'<div><div style="font-weight:700;color:#9a3412;margin-bottom:4px;">Subreddits Monitored</div>'
+    f'<ul>{_sub_lines}</ul></div>'
+    f'<div><div style="font-weight:700;color:#9a3412;margin-bottom:4px;">Search Queries Used</div>'
+    f'<ul>{_q_lines}</ul></div>'
+    '</div></div>',
+    unsafe_allow_html=True,
+)
+
+st.divider()
+
 # ── Sidebar filters ───────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### 💬 Filters")

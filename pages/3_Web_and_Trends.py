@@ -101,6 +101,35 @@ else:
 
     st.divider()
 
+    # ── Trends summary ────────────────────────────────────────────────────
+    st.markdown('<div class="section-heading">📊 Trends Summary</div>', unsafe_allow_html=True)
+
+    _q_counts = web_rows["query"].value_counts()
+    _domains  = web_rows["url"].apply(lambda u: urlparse(u).netloc.replace("www.", ""))
+    _dom_counts = _domains.value_counts().head(6)
+
+    _q_lines = "".join(
+        f'<li><b>{q}</b> — {cnt} articles</li>'
+        for q, cnt in _q_counts.items()
+    )
+    _dom_lines = "".join(
+        f'<li><b>{d}</b> — {cnt} articles</li>'
+        for d, cnt in _dom_counts.items()
+    )
+
+    st.markdown(
+        '<div class="trends-summary-box">'
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
+        f'<div><div style="font-weight:700;color:#1e3a8a;margin-bottom:4px;">Search Queries Tracked</div>'
+        f'<ul>{_q_lines}</ul></div>'
+        f'<div><div style="font-weight:700;color:#1e3a8a;margin-bottom:4px;">Top Sources</div>'
+        f'<ul>{_dom_lines}</ul></div>'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
     with st.sidebar:
         st.markdown("### 🌐 Filters")
         queries = ["All"] + sorted(web_rows["query"].unique().tolist())

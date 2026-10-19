@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import plotly.graph_objects as go
 import streamlit as st
-from dashboard_utils import inject_ui, EMERALD as _EMERALD_IMPORT
+from dashboard_utils import inject_ui, EMERALD as _EMERALD_IMPORT, load_db as _load_db
 
 st.set_page_config(
     page_title="Social Trends Agent",
@@ -281,6 +281,44 @@ def _render_dashboard() -> None:
             with col:
                 n = re.search(r"\d+", value)
                 st.metric(label, n.group() if n else value)
+
+    # ── Source data snapshot ──────────────────────────────────────────────
+    _conn = _load_db()
+    if _conn is not None:
+        try:
+            _yt  = _conn.execute("SELECT COUNT(*), MAX(views_per_day) FROM bronze_youtube").fetchone()
+            _rd  = _conn.execute("SELECT COUNT(*), COUNT(DISTINCT subreddit) FROM bronze_reddit").fetchone()
+            _web = _conn.execute("SELECT COUNT(*), COUNT(DISTINCT query) FROM bronze_web").fetchone()
+            _conn.close()
+            st.markdown('<div class="section-heading">📦 Data Collected</div>', unsafe_allow_html=True)
+            _dc1, _dc2, _dc3 = st.columns(3)
+            _dc1.metric("YouTube videos", int(_yt[0] or 0),
+                        help=f"Peak: {int(_yt[1] or 0):,} views/day")
+            _dc2.metric("Reddit posts", int(_rd[0] or 0),
+                        help=f"Across {int(_rd[1] or 0)} subreddits")
+            _dc3.metric("Web articles", int(_web[0] or 0),
+                        help=f"Across {int(_web[1] or 0)} search queries")
+        except Exception:
+            try: _conn.close()
+            except Exception: pass
+
+    # ── Top themes quick-view ─────────────────────────────────────────────
+    if parsed["themes"]:
+        st.markdown('<div class="section-heading">🔥 Top Trending Themes</div>', unsafe_allow_html=True)
+        _top = sorted(parsed["themes"], key=lambda t: t["views_num"], reverse=True)[:3]
+        _th_cols = st.columns(len(_top))
+        for _col, _t in zip(_th_cols, _top):
+            with _col:
+                st.markdown(
+                    f'<div style="background:white;border:1px solid #d1fae5;border-radius:10px;padding:14px 16px;">'
+                    f'<div style="font-size:0.72em;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">#{_t["rank"]}</div>'
+                    f'<div style="font-weight:800;color:#065f46;font-size:0.92em;line-height:1.35;margin-bottom:6px;">{_t["theme"]}</div>'
+                    f'<div style="color:#6b7280;font-size:0.78em;margin-bottom:8px;">{_t["format"]}</div>'
+                    f'<div style="color:#059669;font-weight:700;font-size:1.05em;">{_t["views_per_day"]}</div>'
+                    f'<div style="color:#9ca3af;font-size:0.72em;">views / day</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
     tab_overview, tab_themes, tab_ideas, tab_trends = st.tabs(
         ["📊 Overview", "🔥 Trending Themes", "💡 Content Ideas", "📈 Trends"]
