@@ -1,8 +1,8 @@
 """
-Streamlit dashboard — combined report view (main page).
+Streamlit dashboard — entry point and combined report view.
 
 Run locally:   uv run --extra dashboard streamlit run dashboard.py
-Deploy:        https://share.streamlit.io
+Deploy:        https://share.streamlit.io  (main file: dashboard.py)
 """
 
 import re
@@ -23,9 +23,7 @@ st.set_page_config(
     layout="wide",
 )
 
-inject_ui()
-
-REPORTS_DIR = Path("reports")
+REPORTS_DIR = Path(__file__).parent / "reports"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -223,162 +221,159 @@ def _chart_trends(report_files: list[Path]) -> go.Figure:
     return fig
 
 
-# ── Load reports ──────────────────────────────────────────────────────────────
+# ── Dashboard page ────────────────────────────────────────────────────────────
 
-report_files = sorted(
-    [f for f in REPORTS_DIR.glob("*.md") if f.name != ".gitkeep"],
-    reverse=True,
-)
+def _render_dashboard() -> None:
+    inject_ui()
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+    report_files = sorted(
+        [f for f in REPORTS_DIR.glob("*.md") if f.name != ".gitkeep"],
+        reverse=True,
+    )
 
-with st.sidebar:
-    st.markdown("### 📡 Social Trends Agent")
-    st.caption("Meta Ray-Ban · India Content Ideas")
-    st.divider()
+    with st.sidebar:
+        st.markdown("### 📡 Social Trends Agent")
+        st.caption("Meta Ray-Ban · India Content Ideas")
+        st.divider()
+        st.markdown(
+            """
+            This agent monitors **trending Meta Ray-Ban smart glasses content** on YouTube and the web,
+            then uses AI to generate **India-specific content ideas** you can film with the glasses.
+
+            It runs daily, ranks themes by average views, and produces a structured report with
+            ready-to-shoot hooks, shot lists, effort ratings, and hashtags.
+            """,
+        )
+        st.divider()
+
+        if not report_files:
+            st.warning("No reports yet.")
+            st.code("uv run python main.py")
+            st.stop()
+
+        st.metric("Total reports", len(report_files))
+        st.metric("Latest run", _timestamp_to_label(report_files[0]).split()[0])
+        st.divider()
+
+        st.markdown("**Report history**")
+        labels = [_timestamp_to_label(f) for f in report_files]
+        selected_idx = st.radio(
+            "Select report",
+            range(len(report_files)),
+            format_func=lambda i: labels[i],
+            label_visibility="collapsed",
+        )
+
+    content = report_files[selected_idx].read_text(encoding="utf-8")
+    parsed  = _parse(content)
+
     st.markdown(
-        """
-        This agent monitors **trending Meta Ray-Ban smart glasses content** on YouTube and the web,
-        then uses AI to generate **India-specific content ideas** you can film with the glasses.
-
-        It runs daily, ranks themes by average views, and produces a structured report with
-        ready-to-shoot hooks, shot lists, effort ratings, and hashtags.
-        """,
-    )
-    st.divider()
-
-    if not report_files:
-        st.warning("No reports yet.")
-        st.code("uv run python main.py")
-        st.stop()
-
-    st.metric("Total reports", len(report_files))
-    st.metric("Latest run", _timestamp_to_label(report_files[0]).split()[0])
-    st.divider()
-
-    st.markdown("**Report history**")
-    labels = [_timestamp_to_label(f) for f in report_files]
-    selected_idx = st.radio(
-        "Select report",
-        range(len(report_files)),
-        format_func=lambda i: labels[i],
-        label_visibility="collapsed",
+        f"""<div class="report-header">
+            <h1>📡 {parsed['title']}</h1>
+            <div class="sub">{"Report date: " + parsed['date'] if parsed['date'] else "No date"}</div>
+        </div>""",
+        unsafe_allow_html=True,
     )
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+    if parsed["stats"]:
+        cols = st.columns(len(parsed["stats"]))
+        for col, (label, value) in zip(cols, parsed["stats"].items()):
+            with col:
+                n = re.search(r"\d+", value)
+                st.metric(label, n.group() if n else value)
 
-content = report_files[selected_idx].read_text(encoding="utf-8")
-parsed  = _parse(content)
+    tab_overview, tab_themes, tab_ideas, tab_trends = st.tabs(
+        ["📊 Overview", "🔥 Trending Themes", "💡 Content Ideas", "📈 Trends"]
+    )
 
-# Header
-st.markdown(
-    f"""<div class="report-header">
-        <h1>📡 {parsed['title']}</h1>
-        <div class="sub">{"Report date: " + parsed['date'] if parsed['date'] else "No date"}</div>
-    </div>""",
-    unsafe_allow_html=True,
-)
+    with tab_overview:
+        if parsed["themes"]:
+            st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="overview_themes")
 
-# Stats row
-if parsed["stats"]:
-    cols = st.columns(len(parsed["stats"]))
-    for col, (label, value) in zip(cols, parsed["stats"].items()):
-        with col:
-            n = re.search(r"\d+", value)
-            st.metric(label, n.group() if n else value)
+        if parsed["ideas"]:
+            c1, c2 = st.columns(2)
+            with c1:
+                st.plotly_chart(_chart_labels(parsed["ideas"]), use_container_width=True, key="overview_labels")
+            with c2:
+                st.plotly_chart(_chart_effort(parsed["ideas"]), use_container_width=True, key="overview_effort")
 
-# ── Tabs ──────────────────────────────────────────────────────────────────────
+            st.markdown('<div class="section-heading">Ideas at a Glance</div>', unsafe_allow_html=True)
+            for idea in parsed["ideas"]:
+                c_title, c_label, c_effort = st.columns([5, 2, 2])
+                with c_title: st.markdown(f"**{idea['title']}**")
+                with c_label:
+                    st.markdown(_badge(idea.get("label", "—")), unsafe_allow_html=True)
+                with c_effort:
+                    st.markdown(_badge(idea.get("effort", "—")), unsafe_allow_html=True)
 
-tab_overview, tab_themes, tab_ideas, tab_trends = st.tabs(
-    ["📊 Overview", "🔥 Trending Themes", "💡 Content Ideas", "📈 Trends"]
-)
+    with tab_themes:
+        if parsed["themes"]:
+            st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="themes_bar")
+            st.markdown('<div class="section-heading">Theme Breakdown</div>', unsafe_allow_html=True)
+            for t in parsed["themes"]:
+                with st.container(border=True):
+                    c1, c2, c3 = st.columns([3, 3, 2])
+                    with c1:
+                        st.markdown(f"**#{t['rank']} — {t['theme']}**")
+                        st.caption(t["format"])
+                    with c2:
+                        if t["example_url"]:
+                            st.markdown(f"[▶ {t['example'][:55]}{'…' if len(t['example']) > 55 else ''}]({t['example_url']})")
+                        else:
+                            st.caption(t["example"][:80])
+                    with c3:
+                        st.metric("Avg views / day", t["views_per_day"])
 
-# ── Overview tab ──────────────────────────────────────────────────────────────
-
-with tab_overview:
-    if parsed["themes"]:
-        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="overview_themes")
-
-    if parsed["ideas"]:
-        c1, c2 = st.columns(2)
-        with c1:
-            st.plotly_chart(_chart_labels(parsed["ideas"]), use_container_width=True, key="overview_labels")
-        with c2:
-            st.plotly_chart(_chart_effort(parsed["ideas"]), use_container_width=True, key="overview_effort")
-
-        # Quick summary table
-        st.markdown('<div class="section-heading">Ideas at a Glance</div>', unsafe_allow_html=True)
-        for idea in parsed["ideas"]:
-            c_title, c_label, c_effort = st.columns([5, 2, 2])
-            with c_title: st.markdown(f"**{idea['title']}**")
-            with c_label:
-                st.markdown(_badge(idea.get("label", "—")), unsafe_allow_html=True)
-            with c_effort:
-                st.markdown(_badge(idea.get("effort", "—")), unsafe_allow_html=True)
-
-# ── Themes tab ────────────────────────────────────────────────────────────────
-
-with tab_themes:
-    if parsed["themes"]:
-        st.plotly_chart(_chart_themes(parsed["themes"]), use_container_width=True, key="themes_bar")
-        st.markdown('<div class="section-heading">Theme Breakdown</div>', unsafe_allow_html=True)
-        for t in parsed["themes"]:
-            with st.container(border=True):
-                c1, c2, c3 = st.columns([3, 3, 2])
-                with c1:
-                    st.markdown(f"**#{t['rank']} — {t['theme']}**")
-                    st.caption(t["format"])
-                with c2:
-                    if t["example_url"]:
-                        st.markdown(f"[▶ {t['example'][:55]}{'…' if len(t['example']) > 55 else ''}]({t['example_url']})")
-                    else:
-                        st.caption(t["example"][:80])
-                with c3:
-                    st.metric("Avg views / day", t["views_per_day"])
-
-# ── Ideas tab ─────────────────────────────────────────────────────────────────
-
-with tab_ideas:
-    if parsed["ideas"]:
-        for i, idea in enumerate(parsed["ideas"], 1):
-            with st.expander(f"**{i}. {idea.get('title', '')}**", expanded=(i == 1)):
-                st.markdown(
-                    f"{_badge(idea.get('label', ''))} &nbsp; {_badge(idea.get('effort', ''))} effort",
-                    unsafe_allow_html=True,
-                )
-                if idea.get("hook"):
+    with tab_ideas:
+        if parsed["ideas"]:
+            for i, idea in enumerate(parsed["ideas"], 1):
+                with st.expander(f"**{i}. {idea.get('title', '')}**", expanded=(i == 1)):
                     st.markdown(
-                        f'<div class="hook-box">"{idea["hook"]}"</div>',
+                        f"{_badge(idea.get('label', ''))} &nbsp; {_badge(idea.get('effort', ''))} effort",
                         unsafe_allow_html=True,
                     )
-                col_left, col_right = st.columns([3, 2])
-                with col_left:
-                    if idea.get("shots"):
-                        st.markdown("**POV Shot List**")
-                        for shot_name, shot_desc in idea["shots"]:
-                            st.markdown(f"• **{shot_name}** — {shot_desc}")
-                    if idea.get("why"):
-                        st.markdown("**Why it works in India**")
+                    if idea.get("hook"):
                         st.markdown(
-                            f'<div class="why-box">{idea["why"]}</div>',
+                            f'<div class="hook-box">"{idea["hook"]}"</div>',
                             unsafe_allow_html=True,
                         )
-                with col_right:
-                    if idea.get("source"):
-                        st.markdown("**Source Trend**")
-                        st.markdown(f"[▶ View on YouTube]({idea['source']})")
-                    if idea.get("hashtags"):
-                        st.markdown("**Hashtags**")
-                        st.markdown(
-                            f'<div class="hashtags">{idea["hashtags"]}</div>',
-                            unsafe_allow_html=True,
-                        )
+                    col_left, col_right = st.columns([3, 2])
+                    with col_left:
+                        if idea.get("shots"):
+                            st.markdown("**POV Shot List**")
+                            for shot_name, shot_desc in idea["shots"]:
+                                st.markdown(f"• **{shot_name}** — {shot_desc}")
+                        if idea.get("why"):
+                            st.markdown("**Why it works in India**")
+                            st.markdown(
+                                f'<div class="why-box">{idea["why"]}</div>',
+                                unsafe_allow_html=True,
+                            )
+                    with col_right:
+                        if idea.get("source"):
+                            st.markdown("**Source Trend**")
+                            st.markdown(f"[▶ View on YouTube]({idea['source']})")
+                        if idea.get("hashtags"):
+                            st.markdown("**Hashtags**")
+                            st.markdown(
+                                f'<div class="hashtags">{idea["hashtags"]}</div>',
+                                unsafe_allow_html=True,
+                            )
 
-# ── Trends tab ────────────────────────────────────────────────────────────────
+    with tab_trends:
+        if len(report_files) >= 2:
+            st.plotly_chart(_chart_trends(report_files), use_container_width=True, key="trends_line")
+        else:
+            st.info("Run the agent at least twice to see trends across reports.")
+            st.caption("The chart will show YouTube videos and web results collected per run over time.")
 
-with tab_trends:
-    if len(report_files) >= 2:
-        st.plotly_chart(_chart_trends(report_files), use_container_width=True, key="trends_line")
-    else:
-        st.info("Run the agent at least twice to see trends across reports.")
-        st.caption("The chart will show YouTube videos and web results collected per run over time.")
+
+# ── Navigation ────────────────────────────────────────────────────────────────
+
+pg = st.navigation([
+    st.Page(_render_dashboard,           title="Dashboard",    icon=":material/dashboard:"),
+    st.Page("pages/1_YouTube.py",        title="YouTube",      icon=":material/smart_display:"),
+    st.Page("pages/2_Reddit.py",         title="Reddit",       icon=":material/forum:"),
+    st.Page("pages/3_Web_and_Trends.py", title="Web & Trends", icon=":material/travel_explore:"),
+])
+pg.run()
