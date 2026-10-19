@@ -90,26 +90,21 @@ st.markdown('<div class="section-heading">📊 Trends Summary</div>', unsafe_all
 
 _sub_counts = rows["subreddit"].value_counts()
 _q_counts   = rows["query"].value_counts()
+_top_subs   = ", ".join(f"r/{s} ({n} posts)" for s, n in _sub_counts.head(3).items())
 
-_sub_lines = "".join(
-    f'<li><b>r/{sub}</b> — {cnt} posts</li>'
-    for sub, cnt in _sub_counts.items()
+_para = (
+    f"{len(rows)} posts were collected from {rows['subreddit'].nunique()} subreddits "
+    f"across {rows['query'].nunique()} search queries. "
+    f"The most active communities were <b>{_top_subs}</b>. "
+    f"The most searched topic was <b>{_q_counts.index[0]}</b>, generating {_q_counts.iloc[0]} posts."
 )
-_q_lines = "".join(
-    f'<li><b>{q}</b> — {cnt} posts</li>'
-    for q, cnt in _q_counts.head(6).items()
-)
+st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
 
-st.markdown(
-    '<div class="trends-summary-box">'
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
-    f'<div><div style="font-weight:700;color:#9a3412;margin-bottom:4px;">Subreddits Monitored</div>'
-    f'<ul>{_sub_lines}</ul></div>'
-    f'<div><div style="font-weight:700;color:#9a3412;margin-bottom:4px;">Search Queries Used</div>'
-    f'<ul>{_q_lines}</ul></div>'
-    '</div></div>',
-    unsafe_allow_html=True,
-)
+_sub_tbl = _sub_counts.reset_index()
+_sub_tbl.columns = ["Subreddit", "Posts"]
+_sub_tbl["Subreddit"] = "r/" + _sub_tbl["Subreddit"]
+_sub_tbl["Share"] = (_sub_tbl["Posts"] / _sub_tbl["Posts"].sum() * 100).round(1).astype(str) + "%"
+st.dataframe(_sub_tbl, hide_index=True, use_container_width=True)
 
 st.divider()
 

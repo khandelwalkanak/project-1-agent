@@ -70,16 +70,13 @@ div[data-testid="metric-container"] {
     border-bottom: 2px solid #6ee7b7; letter-spacing: 0.3px;
 }
 
-.trends-summary-box {
+.trends-paragraph {
     background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%);
-    border: 1px solid #a7f3d0; border-radius: 12px;
-    padding: 18px 22px; margin: 12px 0 20px 0;
+    border-left: 4px solid #10b981; border-radius: 0 10px 10px 0;
+    padding: 14px 20px; color: #1f2937;
+    font-size: 0.92em; line-height: 1.8;
+    margin: 12px 0 16px 0;
 }
-.trends-summary-box ul {
-    margin: 6px 0 0 0; padding-left: 16px;
-    font-size: 0.85em; color: #374151; line-height: 1.9;
-}
-.trends-summary-box li { margin-bottom: 1px; }
 
 .report-header {
     background: linear-gradient(135deg, #065f46 0%, #059669 60%, #10b981 100%);

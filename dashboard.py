@@ -282,7 +282,7 @@ def _render_dashboard() -> None:
                 n = re.search(r"\d+", value)
                 st.metric(label, n.group() if n else value)
 
-    # ── Source data snapshot ──────────────────────────────────────────────
+    # ── Summary paragraph ─────────────────────────────────────────────────
     _conn = _load_db()
     if _conn is not None:
         try:
@@ -290,14 +290,33 @@ def _render_dashboard() -> None:
             _rd  = _conn.execute("SELECT COUNT(*), COUNT(DISTINCT subreddit) FROM bronze_reddit").fetchone()
             _web = _conn.execute("SELECT COUNT(*), COUNT(DISTINCT query) FROM bronze_web").fetchone()
             _conn.close()
-            st.markdown('<div class="section-heading">📦 Data Collected</div>', unsafe_allow_html=True)
-            _dc1, _dc2, _dc3 = st.columns(3)
-            _dc1.metric("YouTube videos", int(_yt[0] or 0),
-                        help=f"Peak: {int(_yt[1] or 0):,} views/day")
-            _dc2.metric("Reddit posts", int(_rd[0] or 0),
-                        help=f"Across {int(_rd[1] or 0)} subreddits")
-            _dc3.metric("Web articles", int(_web[0] or 0),
-                        help=f"Across {int(_web[1] or 0)} search queries")
+
+            _n_same  = sum(1 for i in parsed["ideas"] if i.get("label", "").upper() == "SAME")
+            _n_twist = sum(1 for i in parsed["ideas"] if i.get("label", "").upper() == "TWIST")
+            _n_ws    = sum(1 for i in parsed["ideas"] if i.get("label", "").upper() == "WHITESPACE")
+            _sorted_themes = sorted(parsed["themes"], key=lambda t: t["views_num"], reverse=True)
+            _tnames  = [t["theme"] for t in _sorted_themes[:3]]
+
+            _para = (
+                f"The latest run analyzed <b>{int(_yt[0] or 0)} YouTube videos</b>, "
+                f"<b>{int(_rd[0] or 0)} Reddit posts</b> across {int(_rd[1] or 0)} subreddits, "
+                f"and <b>{int(_web[0] or 0)} web articles</b> via {int(_web[1] or 0)} search queries."
+            )
+            if _tnames:
+                _theme_str = _tnames[0]
+                if len(_tnames) > 2:
+                    _theme_str += f", {_tnames[1]}, and {_tnames[2]}"
+                elif len(_tnames) == 2:
+                    _theme_str += f" and {_tnames[1]}"
+                _para += f" The top trending themes are <b>{_theme_str}</b>."
+            if parsed["ideas"]:
+                _para += (
+                    f" {len(parsed['ideas'])} content ideas were generated — "
+                    f"{_n_same} same-format adaptations, {_n_twist} creative twists, "
+                    f"and {_n_ws} whitespace opportunities."
+                )
+
+            st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
         except Exception:
             try: _conn.close()
             except Exception: pass

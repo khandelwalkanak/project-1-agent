@@ -104,29 +104,34 @@ else:
     # ── Trends summary ────────────────────────────────────────────────────
     st.markdown('<div class="section-heading">📊 Trends Summary</div>', unsafe_allow_html=True)
 
-    _q_counts = web_rows["query"].value_counts()
-    _domains  = web_rows["url"].apply(lambda u: urlparse(u).netloc.replace("www.", ""))
-    _dom_counts = _domains.value_counts().head(6)
+    _q_counts   = web_rows["query"].value_counts()
+    _domains    = web_rows["url"].apply(lambda u: urlparse(u).netloc.replace("www.", ""))
+    _dom_counts = _domains.value_counts()
+    _top_q      = _q_counts.index[0]
+    _top_dom    = _dom_counts.index[0]
+    _sec_dom    = _dom_counts.index[1] if len(_dom_counts) > 1 else None
 
-    _q_lines = "".join(
-        f'<li><b>{q}</b> — {cnt} articles</li>'
-        for q, cnt in _q_counts.items()
+    _para = (
+        f"{len(web_rows)} articles were collected from {_domains.nunique()} unique domains "
+        f"across {web_rows['query'].nunique()} search queries. "
+        f"The most covered topic was <b>{_top_q}</b> with {_q_counts.iloc[0]} articles. "
+        f"<b>{_top_dom}</b> was the most cited source with {_dom_counts.iloc[0]} articles"
+        + (f", followed by <b>{_sec_dom}</b> with {_dom_counts.iloc[1]} articles" if _sec_dom else "")
+        + "."
     )
-    _dom_lines = "".join(
-        f'<li><b>{d}</b> — {cnt} articles</li>'
-        for d, cnt in _dom_counts.items()
-    )
+    st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="trends-summary-box">'
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
-        f'<div><div style="font-weight:700;color:#1e3a8a;margin-bottom:4px;">Search Queries Tracked</div>'
-        f'<ul>{_q_lines}</ul></div>'
-        f'<div><div style="font-weight:700;color:#1e3a8a;margin-bottom:4px;">Top Sources</div>'
-        f'<ul>{_dom_lines}</ul></div>'
-        '</div></div>',
-        unsafe_allow_html=True,
-    )
+    _q_tbl = _q_counts.reset_index()
+    _q_tbl.columns = ["Search Query", "Articles"]
+    _dom_tbl = _dom_counts.head(10).reset_index()
+    _dom_tbl.columns = ["Domain", "Articles"]
+    _tc1, _tc2 = st.columns(2)
+    with _tc1:
+        st.caption("By search query")
+        st.dataframe(_q_tbl, hide_index=True, use_container_width=True)
+    with _tc2:
+        st.caption("By source domain")
+        st.dataframe(_dom_tbl, hide_index=True, use_container_width=True)
 
     st.divider()
 

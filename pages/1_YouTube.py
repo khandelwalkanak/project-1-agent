@@ -89,28 +89,26 @@ _qperf = (
     .sort_values("avg_vpd", ascending=False)
     .reset_index()
 )
-_top_ch = rows.groupby("channel")["views_per_day"].mean().sort_values(ascending=False).head(3)
+_top_ch = rows.groupby("channel")["views_per_day"].mean().sort_values(ascending=False)
+_top_q  = _qperf.iloc[0]
 
-_q_lines = "".join(
-    f'<li><b>{r["query"]}</b> — {int(r["videos"])} videos · '
-    f'avg {r["avg_vpd"]:,.0f} views/day · peak {r["max_vpd"]:,.0f} views/day</li>'
-    for _, r in _qperf.iterrows()
+_para = (
+    f"{len(rows)} videos were collected across {len(_qperf)} search "
+    f"{'query' if len(_qperf) == 1 else 'queries'} from {rows['channel'].nunique()} unique channels. "
+    f"The fastest-growing content focuses on <b>{_top_q['query']}</b>, averaging "
+    f"{_top_q['avg_vpd']:,.0f} views per day with a peak of {_top_q['max_vpd']:,.0f} views per day. "
+    f"<b>{_top_ch.index[0]}</b> leads in engagement, "
+    f"averaging {_top_ch.iloc[0]:,.0f} views per day."
 )
-_ch_lines = "".join(
-    f'<li><b>{ch}</b> — avg {vpd:,.0f} views/day</li>'
-    for ch, vpd in _top_ch.items()
-)
+st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
 
-st.markdown(
-    '<div class="trends-summary-box">'
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
-    f'<div><div style="font-weight:700;color:#065f46;margin-bottom:4px;">Search Queries Tracked</div>'
-    f'<ul>{_q_lines}</ul></div>'
-    f'<div><div style="font-weight:700;color:#065f46;margin-bottom:4px;">Top Channels by Engagement</div>'
-    f'<ul>{_ch_lines}</ul></div>'
-    '</div></div>',
-    unsafe_allow_html=True,
-)
+_tbl = _qperf.rename(columns={
+    "query": "Search Query", "videos": "Videos",
+    "avg_vpd": "Avg Views/Day", "max_vpd": "Peak Views/Day",
+})
+_tbl["Avg Views/Day"]  = _tbl["Avg Views/Day"].round(0).astype(int)
+_tbl["Peak Views/Day"] = _tbl["Peak Views/Day"].round(0).astype(int)
+st.dataframe(_tbl, hide_index=True, use_container_width=True)
 
 st.divider()
 
