@@ -119,19 +119,53 @@ else:
         + (f", followed by <b>{_sec_dom}</b> with {_dom_counts.iloc[1]} articles" if _sec_dom else "")
         + "."
     )
-    st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="trends-paragraph" style="border-left-color:#3b82f6;'
+        f'background:linear-gradient(135deg,#eff6ff 0%,#f9fafb 100%);">{_para}</div>',
+        unsafe_allow_html=True,
+    )
 
     _q_tbl = _q_counts.reset_index()
     _q_tbl.columns = ["Search Query", "Articles"]
+    _q_tbl["Share"] = (_q_tbl["Articles"] / _q_tbl["Articles"].sum() * 100).round(1)
+
     _dom_tbl = _dom_counts.head(10).reset_index()
     _dom_tbl.columns = ["Domain", "Articles"]
+    _dom_tbl["Favicon"] = (
+        "https://www.google.com/s2/favicons?domain=" + _dom_tbl["Domain"] + "&sz=32"
+    )
+    _dom_tbl["Share"] = (_dom_tbl["Articles"] / _dom_tbl["Articles"].sum() * 100).round(1)
+
     _tc1, _tc2 = st.columns(2)
     with _tc1:
         st.caption("By search query")
-        st.dataframe(_q_tbl, hide_index=True, use_container_width=True)
+        st.dataframe(
+            _q_tbl,
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Search Query": st.column_config.TextColumn("Search Query", width="large"),
+                "Articles": st.column_config.NumberColumn("Articles", format="%d"),
+                "Share": st.column_config.ProgressColumn(
+                    "Share %", format="%.0f%%", min_value=0, max_value=100,
+                ),
+            },
+        )
     with _tc2:
         st.caption("By source domain")
-        st.dataframe(_dom_tbl, hide_index=True, use_container_width=True)
+        st.dataframe(
+            _dom_tbl[["Favicon", "Domain", "Articles", "Share"]],
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "Favicon": st.column_config.ImageColumn(" ", width="small"),
+                "Domain": st.column_config.TextColumn("Domain"),
+                "Articles": st.column_config.NumberColumn("Articles", format="%d"),
+                "Share": st.column_config.ProgressColumn(
+                    "Share %", format="%.0f%%", min_value=0, max_value=100,
+                ),
+            },
+        )
 
     st.divider()
 

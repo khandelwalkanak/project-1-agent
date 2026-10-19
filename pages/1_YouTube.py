@@ -108,7 +108,23 @@ _tbl = _qperf.rename(columns={
 })
 _tbl["Avg Views/Day"]  = _tbl["Avg Views/Day"].round(0).astype(int)
 _tbl["Peak Views/Day"] = _tbl["Peak Views/Day"].round(0).astype(int)
-st.dataframe(_tbl, hide_index=True, use_container_width=True)
+st.dataframe(
+    _tbl,
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "Search Query": st.column_config.TextColumn("Search Query", width="large"),
+        "Videos": st.column_config.NumberColumn("Videos", format="%d"),
+        "Avg Views/Day": st.column_config.ProgressColumn(
+            "Avg Views/Day", format="%d",
+            min_value=0, max_value=int(_tbl["Avg Views/Day"].max()),
+        ),
+        "Peak Views/Day": st.column_config.ProgressColumn(
+            "Peak Views/Day", format="%d",
+            min_value=0, max_value=int(_tbl["Peak Views/Day"].max()),
+        ),
+    },
+)
 
 st.divider()
 

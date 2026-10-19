@@ -98,13 +98,28 @@ _para = (
     f"The most active communities were <b>{_top_subs}</b>. "
     f"The most searched topic was <b>{_q_counts.index[0]}</b>, generating {_q_counts.iloc[0]} posts."
 )
-st.markdown(f'<div class="trends-paragraph">{_para}</div>', unsafe_allow_html=True)
+st.markdown(
+    f'<div class="trends-paragraph" style="border-left-color:#f97316;'
+    f'background:linear-gradient(135deg,#fff7ed 0%,#f9fafb 100%);">{_para}</div>',
+    unsafe_allow_html=True,
+)
 
 _sub_tbl = _sub_counts.reset_index()
 _sub_tbl.columns = ["Subreddit", "Posts"]
 _sub_tbl["Subreddit"] = "r/" + _sub_tbl["Subreddit"]
-_sub_tbl["Share"] = (_sub_tbl["Posts"] / _sub_tbl["Posts"].sum() * 100).round(1).astype(str) + "%"
-st.dataframe(_sub_tbl, hide_index=True, use_container_width=True)
+_sub_tbl["Share"] = (_sub_tbl["Posts"] / _sub_tbl["Posts"].sum() * 100).round(1)
+st.dataframe(
+    _sub_tbl,
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "Subreddit": st.column_config.TextColumn("Subreddit", width="medium"),
+        "Posts": st.column_config.NumberColumn("Posts", format="%d"),
+        "Share": st.column_config.ProgressColumn(
+            "Share %", format="%.0f%%", min_value=0, max_value=100,
+        ),
+    },
+)
 
 st.divider()
 
