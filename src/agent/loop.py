@@ -109,9 +109,22 @@ def run_agent(
     print(f"\n[{run_id}] Agent starting | model={model} | max_steps={max_steps} | budget={token_budget:,} tokens")
     print("-" * 60)
 
+    def _send(msg) -> object:
+        """Send a message with exponential backoff on 503."""
+        from google.genai.errors import ServerError
+        delays = [5, 15, 30, 60]
+        for attempt, delay in enumerate(delays + [None], 1):
+            try:
+                return chat.send_message(msg)
+            except ServerError as e:
+                if "503" not in str(e) or delay is None:
+                    raise
+                print(f"[{run_id}] Gemini 503 — retrying in {delay}s (attempt {attempt}/4)…")
+                time.sleep(delay)
+
     # First LLM call — kick off the research workflow
     t0 = time.time()
-    response = chat.send_message(
+    response = _send(
         "Start the research now. Follow your workflow: collect, analyse, generate ideas, write the report."
     )
 
@@ -183,7 +196,7 @@ def run_agent(
 
             # Send all tool results → triggers next LLM response
             t0 = time.time()
-            response = chat.send_message(tool_result_parts)
+            response = _send(tool_result_parts)
             continue
 
         # ── Case 2: LLM is done — return the report ──────────────────────────
