@@ -63,8 +63,10 @@ def _trend_direction(series: list[int]) -> str:
 def _patch_urllib3() -> None:
     """urllib3 v2 renamed method_whitelist → allowed_methods; pytrends still uses the old name."""
     try:
+        import inspect
         from urllib3.util.retry import Retry
-        if "method_whitelist" not in Retry.__init__.__doc__:
+        # __doc__ may be None — check the actual signature instead
+        if "method_whitelist" not in inspect.signature(Retry.__init__).parameters:
             _orig = Retry.__init__
             def _patched(self, *a, **kw):
                 if "method_whitelist" in kw:
