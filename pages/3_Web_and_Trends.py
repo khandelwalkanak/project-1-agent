@@ -136,9 +136,10 @@ else:
     )
     _dom_tbl["Share"] = (_dom_tbl["Articles"] / _dom_tbl["Articles"].sum() * 100).round(1)
 
-    _tc1, _tc2 = st.columns(2)
-    with _tc1:
-        st.caption("By search query")
+    # ── Query: table | chart ──────────────────────────────────────────────
+    st.caption("By search query")
+    _wq1, _wq2 = st.columns([1, 1])
+    with _wq1:
         st.dataframe(
             _q_tbl,
             hide_index=True,
@@ -151,8 +152,32 @@ else:
                 ),
             },
         )
-    with _tc2:
-        st.caption("By source domain")
+    with _wq2:
+        _q_labels = [q[:38] + "…" if len(q) > 38 else q for q in _q_tbl["Search Query"]]
+        _blue_shades = ["#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"]
+        _fig_q = go.Figure(go.Bar(
+            x=_q_tbl["Articles"], y=_q_labels,
+            orientation="h",
+            marker=dict(color=_blue_shades[:len(_q_tbl)], line=dict(color="white", width=1)),
+            text=_q_tbl["Articles"].astype(str),
+            textposition="outside",
+            hovertemplate="<b>%{y}</b><br>%{x} articles<extra></extra>",
+        ))
+        _fig_q.update_layout(
+            **PLOTLY_LAYOUT,
+            title=dict(text="Articles per Query", font=dict(size=13, color="#1e3a8a")),
+            xaxis=dict(showgrid=True, gridcolor="#dbeafe", zeroline=False),
+            yaxis=dict(showgrid=False, autorange="reversed"),
+            height=max(200, len(_q_tbl) * 52),
+        )
+        st.plotly_chart(_fig_q, use_container_width=True, key="web_q_summary_chart")
+
+    st.divider()
+
+    # ── Domain: table | chart ─────────────────────────────────────────────
+    st.caption("By source domain")
+    _wd1, _wd2 = st.columns([1, 1])
+    with _wd1:
         st.dataframe(
             _dom_tbl[["Favicon", "Domain", "Articles", "Share"]],
             hide_index=True,
@@ -166,6 +191,23 @@ else:
                 ),
             },
         )
+    with _wd2:
+        _fig_d = go.Figure(go.Bar(
+            x=_dom_tbl["Articles"], y=_dom_tbl["Domain"],
+            orientation="h",
+            marker=dict(color="#3b82f6", opacity=0.85, line=dict(color="white", width=1)),
+            text=_dom_tbl["Articles"].astype(str),
+            textposition="outside",
+            hovertemplate="<b>%{y}</b><br>%{x} articles<extra></extra>",
+        ))
+        _fig_d.update_layout(
+            **PLOTLY_LAYOUT,
+            title=dict(text="Articles per Domain", font=dict(size=13, color="#1e3a8a")),
+            xaxis=dict(showgrid=True, gridcolor="#dbeafe", zeroline=False),
+            yaxis=dict(showgrid=False, autorange="reversed"),
+            height=max(200, len(_dom_tbl) * 36),
+        )
+        st.plotly_chart(_fig_d, use_container_width=True, key="web_d_summary_chart")
 
     st.divider()
 

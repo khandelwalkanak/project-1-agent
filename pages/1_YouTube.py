@@ -108,23 +108,53 @@ _tbl = _qperf.rename(columns={
 })
 _tbl["Avg Views/Day"]  = _tbl["Avg Views/Day"].round(0).astype(int)
 _tbl["Peak Views/Day"] = _tbl["Peak Views/Day"].round(0).astype(int)
-st.dataframe(
-    _tbl,
-    hide_index=True,
-    use_container_width=True,
-    column_config={
-        "Search Query": st.column_config.TextColumn("Search Query", width="large"),
-        "Videos": st.column_config.NumberColumn("Videos", format="%d"),
-        "Avg Views/Day": st.column_config.ProgressColumn(
-            "Avg Views/Day", format="%d",
-            min_value=0, max_value=int(_tbl["Avg Views/Day"].max()),
-        ),
-        "Peak Views/Day": st.column_config.ProgressColumn(
-            "Peak Views/Day", format="%d",
-            min_value=0, max_value=int(_tbl["Peak Views/Day"].max()),
-        ),
-    },
-)
+
+_col_tbl, _col_chart = st.columns([1, 1])
+with _col_tbl:
+    st.dataframe(
+        _tbl,
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "Search Query": st.column_config.TextColumn("Search Query", width="large"),
+            "Videos": st.column_config.NumberColumn("Videos", format="%d"),
+            "Avg Views/Day": st.column_config.ProgressColumn(
+                "Avg Views/Day", format="%d",
+                min_value=0, max_value=int(_tbl["Avg Views/Day"].max()),
+            ),
+            "Peak Views/Day": st.column_config.ProgressColumn(
+                "Peak Views/Day", format="%d",
+                min_value=0, max_value=int(_tbl["Peak Views/Day"].max()),
+            ),
+        },
+    )
+with _col_chart:
+    _labels = [q[:40] + "…" if len(q) > 40 else q for q in _tbl["Search Query"]]
+    _fig_yt = go.Figure()
+    _fig_yt.add_trace(go.Bar(
+        name="Avg Views/Day", y=_labels, x=_tbl["Avg Views/Day"],
+        orientation="h", marker_color=EMERALD[2],
+        text=_tbl["Avg Views/Day"].apply(lambda v: f"{v:,}"),
+        textposition="outside",
+        hovertemplate="<b>%{y}</b><br>Avg: %{x:,} views/day<extra></extra>",
+    ))
+    _fig_yt.add_trace(go.Bar(
+        name="Peak Views/Day", y=_labels, x=_tbl["Peak Views/Day"],
+        orientation="h", marker_color=EMERALD[4],
+        text=_tbl["Peak Views/Day"].apply(lambda v: f"{v:,}"),
+        textposition="outside",
+        hovertemplate="<b>%{y}</b><br>Peak: %{x:,} views/day<extra></extra>",
+    ))
+    _fig_yt.update_layout(
+        **PLOTLY_LAYOUT,
+        barmode="group",
+        title=dict(text="Avg vs Peak Views/Day by Query", font=dict(size=13, color="#065f46")),
+        xaxis=dict(showgrid=True, gridcolor="#d1fae5", zeroline=False),
+        yaxis=dict(showgrid=False, autorange="reversed"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        height=max(220, len(_tbl) * 60),
+    )
+    st.plotly_chart(_fig_yt, use_container_width=True, key="yt_summary_chart")
 
 st.divider()
 

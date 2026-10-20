@@ -108,18 +108,45 @@ _sub_tbl = _sub_counts.reset_index()
 _sub_tbl.columns = ["Subreddit", "Posts"]
 _sub_tbl["Subreddit"] = "r/" + _sub_tbl["Subreddit"]
 _sub_tbl["Share"] = (_sub_tbl["Posts"] / _sub_tbl["Posts"].sum() * 100).round(1)
-st.dataframe(
-    _sub_tbl,
-    hide_index=True,
-    use_container_width=True,
-    column_config={
-        "Subreddit": st.column_config.TextColumn("Subreddit", width="medium"),
-        "Posts": st.column_config.NumberColumn("Posts", format="%d"),
-        "Share": st.column_config.ProgressColumn(
-            "Share %", format="%.0f%%", min_value=0, max_value=100,
-        ),
-    },
-)
+
+_sub_color_map = {
+    "r/RayBanMeta": "#ef4444", "r/AIGlasses": "#f59e0b", "r/smartglasses": "#8b5cf6",
+    "r/wearables": "#3b82f6", "r/gadgets": "#10b981", "r/india": "#f97316",
+    "r/IndianGaming": "#ec4899", "r/TechIndia": "#059669",
+}
+_bar_colors = [_sub_color_map.get(s, "#94a3b8") for s in _sub_tbl["Subreddit"]]
+
+_col_tbl, _col_chart = st.columns([1, 1])
+with _col_tbl:
+    st.dataframe(
+        _sub_tbl,
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "Subreddit": st.column_config.TextColumn("Subreddit", width="medium"),
+            "Posts": st.column_config.NumberColumn("Posts", format="%d"),
+            "Share": st.column_config.ProgressColumn(
+                "Share %", format="%.0f%%", min_value=0, max_value=100,
+            ),
+        },
+    )
+with _col_chart:
+    _fig_rd = go.Figure(go.Bar(
+        x=_sub_tbl["Posts"], y=_sub_tbl["Subreddit"],
+        orientation="h",
+        marker=dict(color=_bar_colors, line=dict(color="white", width=1)),
+        text=_sub_tbl["Posts"].astype(str),
+        textposition="outside",
+        hovertemplate="<b>%{y}</b><br>%{x} posts<extra></extra>",
+    ))
+    _fig_rd.update_layout(
+        **PLOTLY_LAYOUT,
+        title=dict(text="Posts per Subreddit", font=dict(size=13, color="#9a3412")),
+        xaxis=dict(showgrid=True, gridcolor="#fed7aa", zeroline=False),
+        yaxis=dict(showgrid=False, autorange="reversed"),
+        height=max(220, len(_sub_tbl) * 42),
+    )
+    st.plotly_chart(_fig_rd, use_container_width=True, key="rd_summary_chart")
 
 st.divider()
 
