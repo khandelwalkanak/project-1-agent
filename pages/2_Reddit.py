@@ -14,13 +14,28 @@ inject_ui()
 
 st.markdown("""
 <style>
+/* ── Reddit orange-white theme ── */
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(
+        ellipse 70% 55% at var(--cx) var(--cy),
+        #ffedd5 0%, #fff7ed 25%, #ffffff 60%
+    ) !important;
+}
+div[data-testid="metric-container"] {
+    background: rgba(255,237,213,0.7) !important;
+    border-color: #fed7aa !important;
+}
+.section-heading { color: #9a3412 !important; border-bottom-color: #f97316 !important; }
+.trends-paragraph { border-left-color: #f97316 !important;
+    background: linear-gradient(135deg,#fff7ed 0%,#f9fafb 100%) !important; }
+
 .rd-card {
     background: white; border-radius: 12px; padding: 16px 18px;
     border: 1px solid #e5e7eb; margin-bottom: 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     transition: box-shadow .2s, border-color .2s;
 }
-.rd-card:hover { box-shadow: 0 4px 16px rgba(249,115,22,0.15); border-color: #fdba74; }
+.rd-card:hover { box-shadow: 0 4px 16px rgba(249,115,22,0.18); border-color: #fdba74; }
 .rd-sub {
     display: inline-block; border-radius: 20px; padding: 2px 12px;
     font-size: 0.74em; font-weight: 700; margin-bottom: 8px;
@@ -231,7 +246,7 @@ with st.expander("📊 Subreddit Breakdown"):
         hovertemplate="<b>%{y}</b><br>%{x} posts<extra></extra>",
     ))
     fig.update_layout(**PLOTLY_LAYOUT,
-        title=dict(text="Posts per Subreddit", font=dict(size=13, color="#065f46")),
-        xaxis=dict(showgrid=True, gridcolor="#d1fae5"),
+        title=dict(text="Posts per Subreddit", font=dict(size=13, color="#9a3412")),
+        xaxis=dict(showgrid=True, gridcolor="#fed7aa"),
         yaxis=dict(autorange="reversed"), height=300)
     st.plotly_chart(fig, use_container_width=True, key="rd_sub_chart")

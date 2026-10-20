@@ -94,7 +94,7 @@ div[data-testid="metric-container"] {
 .source-header .sub { font-size: 0.85em; opacity: 0.85; }
 .source-yt   { background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%); }
 .source-rd   { background: linear-gradient(135deg, #9a3412 0%, #f97316 100%); }
-.source-web  { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+.source-web  { background: linear-gradient(135deg, #1a73e8 0%, #4285F4 100%); }
 </style>
 """
 

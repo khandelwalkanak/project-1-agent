@@ -13,32 +13,49 @@ from dashboard_utils import inject_ui, load_db, no_data_notice, PLOTLY_LAYOUT
 st.set_page_config(page_title="Web & Trends — Social Trends", page_icon="https://www.google.com/s2/favicons?domain=google.com&sz=32", layout="wide")
 inject_ui()
 
+_GOOGLE = ["#4285F4", "#EA4335", "#FBBC05", "#34A853", "#FF6D00", "#46BDC6"]
+
 st.markdown("""
 <style>
+/* ── Google theme ── */
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(
+        ellipse 70% 55% at var(--cx) var(--cy),
+        #e8f0fe 0%, #f1f5ff 25%, #ffffff 60%
+    ) !important;
+}
+div[data-testid="metric-container"] {
+    background: rgba(232,240,254,0.7) !important;
+    border-color: #a8c7fa !important;
+}
+.section-heading { color: #1a73e8 !important; border-bottom-color: #4285F4 !important; }
+.trends-paragraph { border-left-color: #4285F4 !important;
+    background: linear-gradient(135deg,#e8f0fe 0%,#f9fafb 100%) !important; }
+
 .web-card {
     background: white; border-radius: 12px; padding: 16px 20px;
     border: 1px solid #e5e7eb; margin-bottom: 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     transition: box-shadow .2s, border-color .2s;
 }
-.web-card:hover { box-shadow: 0 4px 16px rgba(59,130,246,0.15); border-color: #93c5fd; }
+.web-card:hover { box-shadow: 0 4px 16px rgba(66,133,244,0.15); border-color: #a8c7fa; }
 .web-domain {
     display: inline-flex; align-items: center; gap: 6px;
-    background: #eff6ff; color: #1d4ed8; border-radius: 20px;
+    background: #e8f0fe; color: #1a73e8; border-radius: 20px;
     padding: 2px 10px; font-size: 0.74em; font-weight: 700;
     margin-bottom: 8px; text-transform: lowercase;
 }
 .web-domain img { width: 14px; height: 14px; border-radius: 2px; }
 .web-title { font-size: 0.97em; font-weight: 700; color: #111827;
              text-decoration: none; line-height: 1.45; }
-.web-title:hover { color: #1d4ed8; }
+.web-title:hover { color: #1a73e8; }
 .web-snippet { color: #4b5563; font-size: 0.84em; line-height: 1.6;
-               margin: 8px 0 10px 0; border-left: 3px solid #93c5fd;
+               margin: 8px 0 10px 0; border-left: 3px solid #a8c7fa;
                padding-left: 10px; }
 .web-meta { font-size: 0.76em; color: #9ca3af; }
 .query-tag {
-    display: inline-block; background: #f0fdf4; color: #065f46;
-    border: 1px solid #6ee7b7; border-radius: 20px; padding: 2px 10px;
+    display: inline-block; background: #e8f0fe; color: #1a73e8;
+    border: 1px solid #a8c7fa; border-radius: 20px; padding: 2px 10px;
     font-size: 0.74em; font-weight: 600;
 }
 </style>
@@ -120,8 +137,7 @@ else:
         + "."
     )
     st.markdown(
-        f'<div class="trends-paragraph" style="border-left-color:#3b82f6;'
-        f'background:linear-gradient(135deg,#eff6ff 0%,#f9fafb 100%);">{_para}</div>',
+        f'<div class="trends-paragraph">{_para}</div>',
         unsafe_allow_html=True,
     )
 
@@ -154,19 +170,18 @@ else:
         )
     with _wq2:
         _q_labels = [q[:38] + "…" if len(q) > 38 else q for q in _q_tbl["Search Query"]]
-        _blue_shades = ["#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"]
         _fig_q = go.Figure(go.Bar(
             x=_q_tbl["Articles"], y=_q_labels,
             orientation="h",
-            marker=dict(color=_blue_shades[:len(_q_tbl)], line=dict(color="white", width=1)),
+            marker=dict(color=_GOOGLE[:len(_q_tbl)], line=dict(color="white", width=1)),
             text=_q_tbl["Articles"].astype(str),
             textposition="outside",
             hovertemplate="<b>%{y}</b><br>%{x} articles<extra></extra>",
         ))
         _fig_q.update_layout(
             **PLOTLY_LAYOUT,
-            title=dict(text="Articles per Query", font=dict(size=13, color="#1e3a8a")),
-            xaxis=dict(showgrid=True, gridcolor="#dbeafe", zeroline=False),
+            title=dict(text="Articles per Query", font=dict(size=13, color="#1a73e8")),
+            xaxis=dict(showgrid=True, gridcolor="#e8f0fe", zeroline=False),
             yaxis=dict(showgrid=False, autorange="reversed"),
             height=max(200, len(_q_tbl) * 52),
         )
@@ -195,15 +210,15 @@ else:
         _fig_d = go.Figure(go.Bar(
             x=_dom_tbl["Articles"], y=_dom_tbl["Domain"],
             orientation="h",
-            marker=dict(color="#3b82f6", opacity=0.85, line=dict(color="white", width=1)),
+            marker=dict(color="#4285F4", opacity=0.85, line=dict(color="white", width=1)),
             text=_dom_tbl["Articles"].astype(str),
             textposition="outside",
             hovertemplate="<b>%{y}</b><br>%{x} articles<extra></extra>",
         ))
         _fig_d.update_layout(
             **PLOTLY_LAYOUT,
-            title=dict(text="Articles per Domain", font=dict(size=13, color="#1e3a8a")),
-            xaxis=dict(showgrid=True, gridcolor="#dbeafe", zeroline=False),
+            title=dict(text="Articles per Domain", font=dict(size=13, color="#1a73e8")),
+            xaxis=dict(showgrid=True, gridcolor="#e8f0fe", zeroline=False),
             yaxis=dict(showgrid=False, autorange="reversed"),
             height=max(200, len(_dom_tbl) * 36),
         )
@@ -243,18 +258,18 @@ else:
         dc = domains.value_counts().head(15)
         fig = go.Figure(go.Bar(
             x=dc.values.tolist(), y=dc.index.tolist(), orientation="h",
-            marker=dict(color="#3b82f6", opacity=0.8, line=dict(color="white", width=1)),
+            marker=dict(color="#4285F4", opacity=0.8, line=dict(color="white", width=1)),
             hovertemplate="<b>%{y}</b><br>%{x} articles<extra></extra>",
         ))
         fig.update_layout(**PLOTLY_LAYOUT,
-            title=dict(text="Articles per Domain", font=dict(size=13, color="#065f46")),
-            xaxis=dict(showgrid=True, gridcolor="#dbeafe"),
+            title=dict(text="Articles per Domain", font=dict(size=13, color="#1a73e8")),
+            xaxis=dict(showgrid=True, gridcolor="#e8f0fe"),
             yaxis=dict(autorange="reversed"), height=320)
         st.plotly_chart(fig, use_container_width=True, key="web_domains")
 
 # ── Google Trends note ────────────────────────────────────────────────────────
 st.divider()
-st.markdown('<div class="section-heading">📈 Google Trends (India)</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-heading" style="border-bottom-color:#34A853;">📈 Google Trends (India)</div>', unsafe_allow_html=True)
 st.info(
     "Google Trends validates whether themes are **rising, stable, or falling** in India "
     "before the AI commits to a content idea. "

@@ -13,24 +13,41 @@ from dashboard_utils import inject_ui, load_db, no_data_notice, EMERALD, PLOTLY_
 st.set_page_config(page_title="YouTube — Social Trends", page_icon="https://www.google.com/s2/favicons?domain=youtube.com&sz=32", layout="wide")
 inject_ui()
 
+_YT_REDS = ["#7f1d1d", "#991b1b", "#dc2626", "#ef4444", "#f87171", "#fca5a5"]
+
 st.markdown("""
 <style>
+/* ── YouTube red-white theme ── */
+[data-testid="stAppViewContainer"] {
+    background: radial-gradient(
+        ellipse 70% 55% at var(--cx) var(--cy),
+        #fee2e2 0%, #fff1f2 25%, #ffffff 60%
+    ) !important;
+}
+div[data-testid="metric-container"] {
+    background: rgba(254,226,226,0.7) !important;
+    border-color: #fca5a5 !important;
+}
+.section-heading { color: #991b1b !important; border-bottom-color: #ef4444 !important; }
+.trends-paragraph { border-left-color: #ef4444 !important;
+    background: linear-gradient(135deg,#fff1f2 0%,#f9fafb 100%) !important; }
+
 .yt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 24px 0; }
 .yt-card {
     background: white; border-radius: 12px; overflow: hidden;
     border: 1px solid #e5e7eb; transition: box-shadow .2s;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
-.yt-card:hover { box-shadow: 0 4px 18px rgba(5,150,105,0.18); border-color: #6ee7b7; }
+.yt-card:hover { box-shadow: 0 4px 18px rgba(220,38,38,0.15); border-color: #fca5a5; }
 .yt-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
 .yt-body  { padding: 12px 14px 14px 14px; }
 .yt-title { font-weight: 700; font-size: 0.88em; color: #111827; line-height: 1.4;
             text-decoration: none; display: block; margin-bottom: 4px; }
-.yt-title:hover { color: #059669; }
+.yt-title:hover { color: #dc2626; }
 .yt-channel { font-size: 0.78em; color: #6b7280; margin-bottom: 8px; }
 .yt-stats { display: flex; gap: 10px; flex-wrap: wrap; }
 .yt-vpd {
-    background: #d1fae5; color: #065f46; border-radius: 20px;
+    background: #fee2e2; color: #991b1b; border-radius: 20px;
     padding: 2px 10px; font-size: 0.75em; font-weight: 700;
 }
 .yt-age {
@@ -39,7 +56,7 @@ st.markdown("""
 }
 .yt-views { color: #374151; font-size: 0.75em; padding: 2px 0; }
 .rank-badge {
-    display: inline-block; background: #065f46; color: white;
+    display: inline-block; background: #dc2626; color: white;
     border-radius: 50%; width: 22px; height: 22px; text-align: center;
     line-height: 22px; font-size: 0.72em; font-weight: 800; margin-right: 6px;
 }
@@ -133,14 +150,14 @@ with _col_chart:
     _fig_yt = go.Figure()
     _fig_yt.add_trace(go.Bar(
         name="Avg Views/Day", y=_labels, x=_tbl["Avg Views/Day"],
-        orientation="h", marker_color=EMERALD[2],
+        orientation="h", marker_color=_YT_REDS[3],
         text=_tbl["Avg Views/Day"].apply(lambda v: f"{v:,}"),
         textposition="outside",
         hovertemplate="<b>%{y}</b><br>Avg: %{x:,} views/day<extra></extra>",
     ))
     _fig_yt.add_trace(go.Bar(
         name="Peak Views/Day", y=_labels, x=_tbl["Peak Views/Day"],
-        orientation="h", marker_color=EMERALD[4],
+        orientation="h", marker_color=_YT_REDS[5],
         text=_tbl["Peak Views/Day"].apply(lambda v: f"{v:,}"),
         textposition="outside",
         hovertemplate="<b>%{y}</b><br>Peak: %{x:,} views/day<extra></extra>",
@@ -148,8 +165,8 @@ with _col_chart:
     _fig_yt.update_layout(
         **PLOTLY_LAYOUT,
         barmode="group",
-        title=dict(text="Avg vs Peak Views/Day by Query", font=dict(size=13, color="#065f46")),
-        xaxis=dict(showgrid=True, gridcolor="#d1fae5", zeroline=False),
+        title=dict(text="Avg vs Peak Views/Day by Query", font=dict(size=13, color="#991b1b")),
+        xaxis=dict(showgrid=True, gridcolor="#fee2e2", zeroline=False),
         yaxis=dict(showgrid=False, autorange="reversed"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         height=max(220, len(_tbl) * 60),
@@ -258,22 +275,22 @@ with st.expander("📊 Channel & Query Breakdown"):
         ch = rows["channel"].value_counts().head(12)
         fig = go.Figure(go.Bar(
             x=ch.values.tolist(), y=ch.index.tolist(), orientation="h",
-            marker=dict(color=EMERALD[1], opacity=0.85),
+            marker=dict(color=_YT_REDS[2], opacity=0.85),
             hovertemplate="<b>%{y}</b><br>%{x} videos<extra></extra>",
         ))
         fig.update_layout(**PLOTLY_LAYOUT,
-            title=dict(text="Videos per Channel", font=dict(size=13, color="#065f46")),
-            xaxis=dict(showgrid=True, gridcolor="#d1fae5"),
+            title=dict(text="Videos per Channel", font=dict(size=13, color="#991b1b")),
+            xaxis=dict(showgrid=True, gridcolor="#fee2e2"),
             yaxis=dict(autorange="reversed"), height=360)
         st.plotly_chart(fig, use_container_width=True, key="yt_ch_chart")
     with col_b:
         qc = rows["query"].value_counts()
         fig2 = go.Figure(go.Pie(
             labels=qc.index.tolist(), values=qc.values.tolist(),
-            marker=dict(colors=EMERALD, line=dict(color="white", width=2)),
+            marker=dict(colors=_YT_REDS, line=dict(color="white", width=2)),
             hole=0.5, textinfo="label+percent",
         ))
         fig2.update_layout(**PLOTLY_LAYOUT,
-            title=dict(text="Videos per Search Query", font=dict(size=13, color="#065f46")),
+            title=dict(text="Videos per Search Query", font=dict(size=13, color="#991b1b")),
             height=360, showlegend=False)
         st.plotly_chart(fig2, use_container_width=True, key="yt_q_chart")
