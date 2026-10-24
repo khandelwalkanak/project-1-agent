@@ -39,6 +39,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add reports/
+          git add reports/ data/social_trends.duckdb
           git diff --staged --quiet || git commit -m "chore: daily report $(date +%Y-%m-%d)"
           git push
